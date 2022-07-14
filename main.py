@@ -1,9 +1,13 @@
+# Голосовой помощник Хлоя 0.2
+
+
 import pyttsx3,datetime
 import speech_recognition as sr
+import os
 import wikipedia
 import webbrowser
-import os
-from random import randrange
+import random
+from config import USER_NAME
 
 engine=pyttsx3.init()
 voices=engine.getProperty('voices')
@@ -14,127 +18,96 @@ def speak(audio):
     engine.say(audio)
     engine.runAndWait()
 
-
-
-def wishMe():
-    hour=int(datetime.datetime.now().hour)
-    if hour>=0 and hour<=12:
-        speak("Good Morning!")
-    elif hour>=12 and hour<18:
-        speak("Good Afternoon!")
-    else:
-        speak("добрый вечер!")
-
-    speak("How can I Help You?")
-
-
 def takeCommand():
-    r=sr.Recognizer()
-    with sr.Microphone() as source:
-        print("Listening...")
-        r.pause_threshold= 1
-        audio=r.listen(source)
+        r=sr.Recognizer()
+        with sr.Microphone() as source:
+            print("Слушаю...")
+            r.pause_threshold= 1
+            audio=r.listen(source)
+        
+        try:
+            print("Анализ...")
+            query=r.recognize_google(audio, language='ru')
+            print("Вы сказали : ",query)
     
-    try:
-        print("Recognizing...")
-        query=r.recognize_google(audio, language='ru')
-        print("You Said : ",query)
-
-    except Exception as e:
-        print("Say that again please....")
-        return 'None'
-
-    return query
-
-
-def jokes():
-    response = ["Циля, забери своего бесстыжего кота. Он опять изображал голодный обморок у рыбного отдела.",
-                "Хожу к стоматологу, ставят обезболивающее, чтоб с деньгами не больно было расставаться."
-                ][
-        randrange(2)]
-    return response
-
-def quote():
-    response = ["«Чем умнее человек, тем легче он признает себя дураком». Альберт Эйнштейн",
-                "«Никогда не ошибается тот, кто ничего не делает». Теодор Рузвельт",
-                "«Менее всего просты люди, желающие казаться простыми». Лев Николаевич Толстой"
-                ][
-        randrange(3)]
-    return response
+        except Exception as e:
+            print("Повтори....")
+            return 'None'
+    
+        return query
 
 
 
 
+file = open("config.py", "r", encoding="utf-8")
+logins = file.read()
+if USER_NAME == str('start'):
+    speak("Здравствуйте! Меня зовут Хлоя. Как вас зовут?")
+    file = open("config.py", "w", encoding="utf-8") # w - write
+    query=takeCommand().lower() # слушаем 
+    USER_NAME = query.replace("", "") # Возвращает копию строки, в которой заменены все вхождения указанной строки указанным значением.
+    file.write(f"USER_NAME = str('{USER_NAME}') ")
+    file.close()
+    speak("Отлично! Настройка завершена. ")
 
+else:
+    def wishMe():
+        hour=int(datetime.datetime.now().hour)
+        if hour>=0 and hour<=12:
+            speak("Доброе Утро!")
+        elif hour>=12 and hour<18:
+            speak("Добрый День!")
+        else:
+            speak("Добрый Вечер!")
+    
+        speak("Как я могу вам помочь?")
+    
+    
+    
+    def jokes():
+        jokes_examples = ["Лично мне клоуны совсем не кажутся смешными. По правде говоря, я их боюсь. Даже не знаю, когда это началось. Наверное, когда меня в детстве повели в цирк и клоун убил моего отца"]
+        speak('Окей')
+        speak(jokes_examples)
+    
+    
+    if __name__=="__main__":
+        wishMe()
+        while True:
+            query=takeCommand().lower()
+    
+            if 'открой гугл' in query:
+                query=query.replace('отркой',"")
+                webbrowser.open("google.com")
+    
+            elif 'скажи' and 'время' in query:
+                strTime= datetime.datetime.now().strftime("%H:%M:%S")
+                speak("Время")
+                speak(strTime)
+    
+            elif 'шутка' in query:
+                jokes()
+    
+    
+            elif 'открой' and 'Chrome' in query:
+                path2="C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
+                os.startfile(path2)
+                
+            elif 'найди' in query or 'посмотри' in query:
+                query = query.replace("найди", "")
+                query = query.replace("играть", "")
+                webbrowser.open(query)
 
-
-
-
-
-
-
-
-
-
-
-
-if __name__=="__main__":
-    wishMe()
-    while True:
-        query=takeCommand().lower()
-        
-        
-        if "wikipedia" in query:
-            speak("Searching wikipedia....")
-            query = query.replace('wikipedia',"")
-            results = wikipedia.summary(query, sentences=2)
-            speak("According to wikipedia...")
-            print(results)
-            speak(results)
-            
-        elif 'open google' in query:
-            query=query.replace('open',"")
-            webbrowser.open("google.com")
-
-        elif 'open youtube' in query:
-            query=query.replace('open',"")
-            webbrowser.open("youtube.com")
-
-        elif 'play music' in query:
-            pass
-        
-        elif 'скажи' and 'время' in query:
-            strTime= datetime.datetime.now().strftime("%H:%M:%S")
-            speak("Время")
-            speak(strTime)
-            
-        elif 'open code' in query:
-            codepath="C:\\Users\\admin\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe"
-            os.startfile(codepath)
-
-        elif 'open firefox' in query:
-            path1="C:\Program Files\Mozilla Firefox\firefox.exe"
-            os.startfile(path1)
-
-        elif 'open chrome' in query:
-            path2="C:\Program Files\Google\Chrome\Application\chrome.exe"
-            os.startfile(path2)
-
-        elif 'open setting' in query:
-            path3="%windir%\System32\Control.exe"
-            os.startfile(path3)
-
-
-        elif 'open bluestacks' in query:
-            path4="C:\Program Files\BlueStacks_nxt\HD-Player.exe --instance Nougat32"
-            os.startfile(path4)
-
-        elif 'шутка' or 'скажи' and 'шутку' in query:
-            speak(jokes())
-
-        elif 'цитата' or 'скажи' and 'цитату' in query:
-            speak(quote())
-
-        else : 
-            print("Didn't recognized! Please say it again...")
-            takeCommand()
+    
+            elif 'стоп' or 'выключись' in query:
+                speak("Окей")
+                exit()
+    
+            else : 
+                print("...")
+                takeCommand()
+    
+    
+    
+    
+    
+    
