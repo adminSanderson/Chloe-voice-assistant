@@ -1,113 +1,53 @@
-# Голосовой помощник Хлоя 0.2
-
-
-import pyttsx3,datetime
+from gtts import gTTS
+import random
+import time
+import playsound
 import speech_recognition as sr
 import os
-import wikipedia
-import webbrowser
-import random
-from config import USER_NAME
-
-engine=pyttsx3.init()
-voices=engine.getProperty('voices')
-engine.setProperty('voice',voices[0].id)
+import plugin_commands
 
 
-def speak(audio):
-    engine.say(audio)
-    engine.runAndWait()
+def listen_command():
+    # получить звук с микрофона
+    r = sr.Recognizer()
+    with sr.Microphone() as source:
+        print("Скажите вашу команду: ")
+        audio = r.listen(source)
+    # распознавать речь с помощью Google Speech Recognition 
+    try:
+        our_speech = r.recognize_google(audio, language="ru")
+        print("Вы сказали: "+our_speech)
+        return our_speech
+    except sr.UnknownValueError:
+        return "ошибка"
+    except sr.RequestError:
+        return "ошибка"
 
-def takeCommand():
-        r=sr.Recognizer()
-        with sr.Microphone() as source:
-            print("Слушаю...")
-            r.pause_threshold= 1
-            audio=r.listen(source)
-        
-        try:
-            print("Анализ...")
-            query=r.recognize_google(audio, language='ru')
-            print("Вы сказали : ",query)
-    
-        except Exception as e:
-            print("Повтори....")
-            return 'None'
-    
-        return query
+def do_this_command(message):
+    message = message.lower()
+    if "xлоя" and "привет" in message:
+        plugin_commands.hello()
+    elif "хлоя" and "инструкция" in message:
+        plugin_commands.help()
+    elif "хлоя" and "файл" in message:
+        plugin_commands.write_file(message)
+    elif "хлоя" and "пока" in message:
+        say_message("пока")
+        exit()
+    elif "хлоя" and "команды" or "команда" in message:
+        plugin_commands.commands()
+    else:
+        say_message("Команда не распознаётся!")
 
+def say_message(message): #голос ассистента
+    voice = gTTS(message, lang="ru")
+    file_voice_name = "_audio_"+str(time.time())+"_"+str(random.randint(0,100000))+".mp3"
+    voice.save(file_voice_name)
+    playsound.playsound(file_voice_name)
+    print("Голосовой ассистент: "+message)
+    os.remove(file_voice_name)
 
-
-
-file = open("config.py", "r", encoding="utf-8")
-logins = file.read()
-if USER_NAME == str('start'):
-    speak("Здравствуйте! Меня зовут Хлоя. Как вас зовут?")
-    file = open("config.py", "w", encoding="utf-8") # w - write
-    query=takeCommand().lower() # слушаем 
-    USER_NAME = query.replace("", "") # Возвращает копию строки, в которой заменены все вхождения указанной строки указанным значением.
-    file.write(f"USER_NAME = str('{USER_NAME}') ")
-    file.close()
-    speak("Отлично! Настройка завершена. ")
-
-else:
-    def wishMe():
-        hour=int(datetime.datetime.now().hour)
-        if hour>=0 and hour<=12:
-            speak("Доброе Утро!")
-        elif hour>=12 and hour<18:
-            speak("Добрый День!")
-        else:
-            speak("Добрый Вечер!")
-    
-        speak("Как я могу вам помочь?")
-    
-    
-    
-    def jokes():
-        jokes_examples = ["Лично мне клоуны совсем не кажутся смешными. По правде говоря, я их боюсь. Даже не знаю, когда это началось. Наверное, когда меня в детстве повели в цирк и клоун убил моего отца"]
-        speak('Окей')
-        speak(jokes_examples)
-    
-    
-    if __name__=="__main__":
-        wishMe()
-        while True:
-            query=takeCommand().lower()
-    
-            if 'открой гугл' in query:
-                query=query.replace('отркой',"")
-                webbrowser.open("google.com")
-    
-            elif 'скажи' and 'время' in query:
-                strTime= datetime.datetime.now().strftime("%H:%M:%S")
-                speak("Время")
-                speak(strTime)
-    
-            elif 'шутка' in query:
-                jokes()
-    
-    
-            elif 'открой' and 'Chrome' in query:
-                path2="C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
-                os.startfile(path2)
-                
-            elif 'найди' in query or 'посмотри' in query:
-                query = query.replace("найди", "")
-                query = query.replace("играть", "")
-                webbrowser.open(query)
-
-    
-            elif 'стоп' or 'выключись' in query:
-                speak("Окей")
-                exit()
-    
-            else : 
-                print("...")
-                takeCommand()
-    
-    
-    
-    
-    
-    
+if __name__ == '__main__':
+    while True:
+        command = listen_command()
+        do_this_command(command)
