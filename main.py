@@ -4,8 +4,9 @@ import time
 import playsound
 import speech_recognition as sr
 import os
+from config import VA_VER
 import plugin_commands
-
+import plugin_mark
 
 def listen_command():
     # получить звук с микрофона
@@ -34,6 +35,9 @@ def do_this_command(message):
     elif "хлоя" and "пока" in message:
         say_message("пока")
         exit()
+    elif "хлоя" and "версия" in message:
+        plugin_mark.QRversion()
+        say_message('Моя версия ' + VA_VER)
     elif "хлоя" and "команды" or "команда" in message:
         plugin_commands.commands()
     else:
