@@ -12,3 +12,4 @@ def QRversion():
     # сохраняем img в файл
     img.save(filename)
     
+    
